@@ -1,0 +1,7 @@
+version: 2
+
+models:
+  - name: census_base
+    description: Adult income census data
+    config:
+      materialized: table
