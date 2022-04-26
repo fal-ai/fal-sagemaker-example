@@ -5,3 +5,14 @@ models:
     description: Adult income census data
     config:
       materialized: table
+  - name: features
+    config:
+      materialized: table
+    meta:
+      fal:
+        scripts:
+          after:
+            - data_prep.py
+  - name: earns_more_than_50k
+    config:
+      materialized: table

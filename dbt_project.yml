@@ -10,6 +10,8 @@ analysis-paths: ["analyses"]
 test-paths: ["tests"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
+vars:
+  fal-scripts-path: "scripts"
 
 target-path: "target"  # directory which will store compiled SQL files
 clean-targets:         # directories to be removed by `dbt clean`

@@ -1,0 +1,5 @@
+fal
+boto3
+sagemaker
+sklearn
+pandas
