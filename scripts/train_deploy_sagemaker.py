@@ -55,7 +55,7 @@ boto3.Session().resource("s3").Bucket(bucket).Object(
 print("Finished preparing data")
 
 # SageMaker training
-role = os.environ.get("sagemake_role")
+role = os.environ.get("sagemaker_role")
 region = sagemaker.Session().boto_region_name
 
 s3_output_location = "s3://{}/{}/{}".format(bucket, prefix, "xgboost_model")
