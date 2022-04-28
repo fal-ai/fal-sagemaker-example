@@ -12,7 +12,7 @@ models:
       fal:
         scripts:
           after:
-            - data_prep.py
+            - train_deploy_sagemaker.py
   - name: earns_more_than_50k
     config:
       materialized: table
