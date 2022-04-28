@@ -6,12 +6,16 @@ from sklearn.model_selection import train_test_split
 import sagemaker
 from sagemaker.debugger import Rule, rule_configs
 from sagemaker.session import TrainingInput
+from sagemaker.serializers import CSVSerializer
 
-features = ref(context.current_model.name)
+# Get Features and Labels
+features = ref("features")
 
 label = ref("earns_more_than_50k")
+
 label_vector = np.equal(label["above"].to_numpy(), 1.0)
 
+# Split data into training, validation and testing
 X_train, X_test, y_train, y_test = train_test_split(
     features, label_vector, test_size=0.2, random_state=1
 )
@@ -34,6 +38,7 @@ test = pd.concat(
     axis=1,
 )
 
+# Convert data to CSV and upload data to S3
 train.to_csv("train.csv", index=False, header=False)
 validation.to_csv("validation.csv", index=False, header=False)
 
@@ -49,7 +54,9 @@ boto3.Session().resource("s3").Bucket(bucket).Object(
 
 print("Finished preparing data")
 
+# SageMaker training
 role = os.environ.get("sagemake_role")
+region = sagemaker.Session().boto_region_name
 
 s3_output_location = "s3://{}/{}/{}".format(bucket, prefix, "xgboost_model")
 
@@ -65,7 +72,6 @@ xgb_model = sagemaker.estimator.Estimator(
     sagemaker_session=sagemaker.Session(),
     rules=[Rule.sagemaker(rule_configs.create_xgboost_report())],
 )
-
 
 xgb_model.set_hyperparameters(
     max_depth=5,
@@ -88,3 +94,13 @@ validation_input = TrainingInput(
 print("Starting training")
 
 xgb_model.fit({"train": train_input, "validation": validation_input}, wait=True)
+
+print("Training complete")
+
+# Model deployment
+
+xgb_predictor = xgb_model.deploy(
+    initial_instance_count=1, instance_type="ml.t2.medium", serializer=CSVSerializer()
+)
+
+print(xgb_predictor.endpoint_name)
