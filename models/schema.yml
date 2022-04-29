@@ -1,10 +1,13 @@
 version: 2
 
+sources:
+  - name: results
+    database: test
+    schema: dbt_fal
+    tables:
+      - name: predictions
+
 models:
-  - name: census_base
-    description: Adult income census data
-    config:
-      materialized: table
   - name: features
     config:
       materialized: table
@@ -13,6 +16,7 @@ models:
         scripts:
           after:
             - train_deploy_sagemaker.py
-  - name: earns_more_than_50k
+
+  - name: labels
     config:
       materialized: table
