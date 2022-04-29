@@ -6,18 +6,18 @@ from sklearn.model_selection import train_test_split
 import sagemaker
 from sagemaker.debugger import Rule, rule_configs
 from sagemaker.session import TrainingInput
-from sagemaker.serializers import CSVSerializer
+from io import BytesIO
 
 # Get Features and Labels
 features = ref("features")
 
-label = ref("earns_more_than_50k")
+labels = ref("labels")
 
-label_vector = np.equal(label["above"].to_numpy(), 1.0)
+labels_vector = labels["Income>50K"].to_numpy()
 
 # Split data into training, validation and testing
 X_train, X_test, y_train, y_test = train_test_split(
-    features, label_vector, test_size=0.2, random_state=1
+    features, labels_vector, test_size=0.2, random_state=1
 )
 
 X_train, X_val, y_train, y_val = train_test_split(
@@ -97,10 +97,49 @@ xgb_model.fit({"train": train_input, "validation": validation_input}, wait=True)
 
 print("Training complete")
 
-# Model deployment
+X_test.to_csv("test.csv", index=False, header=False)
 
-xgb_predictor = xgb_model.deploy(
-    initial_instance_count=1, instance_type="ml.t2.medium", serializer=CSVSerializer()
+print("Uploading test data")
+boto3.Session().resource("s3").Bucket(bucket).Object(
+    os.path.join(prefix, "test/test.csv")
+).upload_file("test.csv")
+
+
+# Test input
+batch_input = "s3://{}/{}/test".format(bucket, prefix)
+
+# Batch transform output
+batch_output = "s3://{}/{}/batch-prediction".format(bucket, prefix)
+
+transformer = xgb_model.transformer(
+    instance_count=1, instance_type="ml.m4.xlarge", output_path=batch_output
 )
 
-print(xgb_predictor.endpoint_name)
+print("Start prediction")
+transformer.transform(
+    data=batch_input, data_type="S3Prefix", content_type="text/csv", split_type="Line"
+)
+transformer.wait()
+
+print("Prediction complete")
+
+prediction_obj = (
+    boto3.Session()
+    .resource("s3")
+    .Bucket(bucket)
+    .Object(os.path.join(prefix, "batch-prediction/test.csv.out"))
+)
+
+print("Downloading predictions")
+with BytesIO(prediction_obj.get()["Body"].read()) as prediction_raw:
+    predictions = np.loadtxt(prediction_raw, dtype="float")
+    output_df = pd.concat(
+        [
+            pd.Series(predictions, index=X_test.index, name="prediction", dtype=int),
+            X_test,
+        ],
+        axis=1,
+    )
+
+    print("Writing predictions to the Data Warehouse")
+    write_to_source(output_df, "results", "predictions", mode="overwrite")
