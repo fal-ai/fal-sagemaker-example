@@ -5,7 +5,7 @@ sources:
     database: test
     schema: dbt_fal
     tables:
-      - name: predictions
+      - name: earning_predictions
 
 models:
   - name: features

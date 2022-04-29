@@ -142,4 +142,4 @@ with BytesIO(prediction_obj.get()["Body"].read()) as prediction_raw:
     )
 
     print("Writing predictions to the Data Warehouse")
-    write_to_source(output_df, "results", "predictions", mode="overwrite")
+    write_to_source(output_df, "results", "earning_predictions", mode="overwrite")
