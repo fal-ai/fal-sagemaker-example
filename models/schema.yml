@@ -5,18 +5,29 @@ sources:
     database: test
     schema: dbt_fal
     tables:
-      - name: earning_predictions
+      - name: sagemaker_models
 
 models:
   - name: features
+    config:
+      materialized: table
+
+  - name: labels
+    config:
+      materialized: table
+
+  - name: sagemaker_models
+    meta:
+      fal:
+        scripts:
+          after:
+            - train.py
+
+  - name: sample_batch
     config:
       materialized: table
     meta:
       fal:
         scripts:
           after:
-            - train_deploy_sagemaker.py
-
-  - name: labels
-    config:
-      materialized: table
+            - predict.py
