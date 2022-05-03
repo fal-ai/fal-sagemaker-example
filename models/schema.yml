@@ -1,18 +1,7 @@
 version: 2
 
-sources:
-  - name: results
-    database: test
-    schema: dbt_fal
-    tables:
-      - name: sagemaker_models
-
 models:
-  - name: features
-    config:
-      materialized: table
-
-  - name: labels
+  - name: training_sample
     config:
       materialized: table
 
@@ -26,6 +15,8 @@ models:
   - name: sample_batch
     config:
       materialized: table
+
+  - name: sample_batch_with_predictions
     meta:
       fal:
         scripts:

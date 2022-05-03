@@ -1,4 +1,4 @@
 {{ config(materialized='ephemeral') }}
--- {{ ref('training_sample') }}
+-- {{ ref('sample_batch') }}
 
 SELECT * FROM {{ target.schema }}.{{ model.name }}

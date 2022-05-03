@@ -8,8 +8,8 @@ import pandas as pd
 bucket = os.environ.get("s3_bucket")
 prefix = os.environ.get("s3_prefix")
 
-batch_df = ref(context.current_model.name)
-batch_df = batch_df.drop("Above50k", 1)
+batch_df = ref("sample_batch")
+
 batch_df.to_csv("batch.csv", index=False, header=False)
 
 print("Uploading batch data")
@@ -30,6 +30,8 @@ sagemaker_models = ref("sagemaker_models")
 model_name = sagemaker_models.sort_values(by="created_at", ascending=False).iloc[0][
     "job_name"
 ]
+
+print(f"Using model: {model_name}")
 
 sagemaker_model = sagemaker.estimator.Estimator.attach(model_name)
 
@@ -66,4 +68,4 @@ with BytesIO(prediction_obj.get()["Body"].read()) as prediction_raw:
     )
 
     print("Writing predictions to the Data Warehouse")
-    write_to_model(output_df, mode="overwrite")
+    write_to_model(output_df)

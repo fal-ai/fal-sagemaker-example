@@ -1,4 +1,5 @@
-import numpy as np
+"""Run prediction model training job and store model data in a dbt."""
+
 import pandas as pd
 import boto3
 import os
@@ -6,15 +7,13 @@ from sklearn.model_selection import train_test_split
 import sagemaker
 from sagemaker.debugger import Rule, rule_configs
 from sagemaker.session import TrainingInput
-from io import BytesIO
 import time
 
 # Get Features and Labels
-features = ref("features")
+training_sample = ref("training_sample")
 
-labels = ref("labels")
-
-labels_vector = labels["Income>50K"].to_numpy()
+labels_vector = training_sample["Income>50K"].to_numpy()
+features = training_sample.drop("Income>50K", 1)
 
 # Split data into training, validation
 X_train, X_val, y_train, y_val = train_test_split(
@@ -95,6 +94,6 @@ data = {
 
 model_df = pd.DataFrame.from_dict(data)
 
-write_to_source(model_df, "results", "sagemaker_models", mode="append")
+write_to_model(model_df, mode="append")
 
 print(f"{context.current_model.name} has been updated.")
