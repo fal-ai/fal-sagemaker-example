@@ -1,3 +1,5 @@
+"""Run Sagemaker prediction on a dbt model."""
+
 import boto3
 import sagemaker
 import os
